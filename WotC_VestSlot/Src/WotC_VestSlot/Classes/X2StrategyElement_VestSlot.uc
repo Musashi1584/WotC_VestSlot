@@ -6,7 +6,7 @@ var config array<name> AbilityUnlocksVestSlot;
 
 var config bool bLog;
 var config array<name> AllowedItemCategories;
-var config bool bDisallowEmpty;
+var config bool bAllowEmpty;
 
 var config array<name> AllowedSoldierClasses;
 var config array<name> AllowedCharacterTemplates;
@@ -148,7 +148,7 @@ static function VestValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 
 	`LOG(Unit.GetFullName() @ "validating Vest Slot. Unit has slot:" @ HasSlot @ EquippedVest == none ? ", slot is empty." : ", slot contains item:" @ EquippedVest.GetMyTemplateName(), default.bLog, 'WotC_VestSlot');
 
-	if(EquippedVest == none && HasSlot && default.bDisallowEmpty)
+	if(EquippedVest == none && HasSlot && !default.bAllowEmpty)
 	{
 		EquippedVest = FindBestVest(Unit, XComHQ, NewGameState);
 		if (EquippedVest != none)
@@ -214,12 +214,12 @@ private static function XComGameState_Item FindBestVest(const XComGameState_Unit
 
 function ECHSlotUnequipBehavior VestGetUnequipBehavior(CHItemSlot Slot, ECHSlotUnequipBehavior DefaultBehavior, XComGameState_Unit Unit, XComGameState_Item ItemState, optional XComGameState CheckGameState)
 {	
-	if (default.bDisallowEmpty)
+	if (default.bAllowEmpty)
 	{
-		return eCHSUB_AttemptReEquip;
+		return eCHSUB_AllowEmpty;
 	}
 	else
 	{
-		return eCHSUB_AllowEmpty;
+		return eCHSUB_AttemptReEquip;
 	}
 }
