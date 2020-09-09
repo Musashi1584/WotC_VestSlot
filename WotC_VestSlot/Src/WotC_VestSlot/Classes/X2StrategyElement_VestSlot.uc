@@ -68,6 +68,15 @@ static function bool HasVestSlot(CHItemSlot Slot, XComGameState_Unit UnitState, 
 	local X2EquipmentTemplate EquipmentTemplate;
 	local array<XComGameState_Item> CurrentInventory;
 	local XComGameState_Item InventoryItem;
+	
+	// Added by Hotl3looded to check for GTS granted abilities
+	local X2AbilityTemplateManager			AbilityTemplateManager;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local array<X2SoldierUnlockTemplate>	UnlockTemplates;
+	local X2SoldierAbilityUnlockTemplate	AbilityUnlockTemplate;
+	local X2AbilityTemplate					AbilityTemplate;
+	local int								i;
+	// End of addition by Hotl3looded
 
 	//	Check for whitelisted soldier classes first.
 	if (default.AllowedSoldierClasses.Find(UnitState.GetSoldierClassTemplateName()) != INDEX_NONE)
@@ -109,6 +118,30 @@ static function bool HasVestSlot(CHItemSlot Slot, XComGameState_Unit UnitState, 
 				}
 			}
 		}
+		
+		// Added by Hotl3looded to check for GTS granted abilities
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
+		if (XComHQ != none)
+		{
+			UnlockTemplates = XComHQ.GetActivatedSoldierUnlockTemplates(); // gets all activated GTS Unlock templates
+			for (i = 0; i < UnlockTemplates.Length; ++i)
+			{
+				AbilityUnlockTemplate = X2SoldierAbilityUnlockTemplate(UnlockTemplates[i]); // selects an activated GTS Unlock template
+				if (AbilityUnlockTemplate != none && AbilityUnlockTemplate.UnlockAppliesToUnit(UnitState)) // checks if unit's soldier class is allowed to have the ability through the GTS Unlock template
+				{
+					AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(AbilityUnlockTemplate.AbilityName); // finds ability given by the selected GTS Unlock template
+					if (AbilityTemplate != none)
+					{
+						if (default.AbilityUnlocksVestSlot.Find(AbilityTemplate.DataName) != INDEX_NONE) // checks if ability is supposed to unlock the Vest Slot
+						{
+								return true;
+						}
+					}
+				}
+			}
+		}
+		// End of addition by Hotl3looded
 
 		//	If the config array has at least one ability, we do not add the slot to all soldiers.
 		`LOG(UnitState.GetFullName() @ "does not have Vest Slot, because they do not have any abilities from the configured list.", default.bLog, 'WotC_VestSlot');
